@@ -2,6 +2,7 @@
 // This is a simplified version of frogger where you have to get frogger across
 // the river to win.
 
+#include <unistd.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -158,6 +159,8 @@ void command_loop(struct board_tile game_board[SIZE][SIZE]) {
     
     while (sentinal) {
         printf("Enter command: ");
+        fflush(stdout);  // Make sure the prompt is printed immediately
+        usleep(250000);  // Introduce a delay of 250,000 microseconds (1/4 second)
         char scanned_char;
         int scanf_return = scanf(" %c", &scanned_char);
         
@@ -420,6 +423,9 @@ int game_mode) {
                 game_board[row_to_clear][col].type = WATER;
                 game_board[row_to_clear][col].bug.bug_on_tile = FALSE;
                 game_board[row_to_clear][col].bug.superbug = FALSE;
+                game_board[row_to_clear][col].occupied = FALSE;
+                game_board[row_to_clear][col].bug.movement_direction = RIGHT;
+                game_board[row_to_clear][col].bug.bug_has_moved = FALSE;
             }
         }
     }
