@@ -188,6 +188,9 @@ void command_loop(struct board_tile game_board[SIZE][SIZE]) {
             move_right(game_board);            
             movement_sequence(game_board, &amount_of_lives, &game_state,
             game_mode);
+        } else if (scanned_char == 'q') {
+            movement_sequence(game_board, &amount_of_lives, &game_state,
+            game_mode);
         } else if (scanned_char == 'b') {
             adding_bug(game_board, game_mode);   
         } else if (scanned_char == 'g') {

@@ -19,6 +19,7 @@ w: Move the frog upwards.
 s: Move the frog downwards.
 a: Move the frog to the left.
 d: Move the frog to the right.
+q: Frogger stays still.
 
 Game Elements
 l [row] [start_col] [end_col]: Place a log on the game board at the specified row, starting from start_col and ending at end_col.
