@@ -27,6 +27,8 @@
 #define ON          1
 #define OFF         0
 
+#define AMOUNT_OF_LIVES 3
+
 
 enum tile_type {LILLYPAD, BANK, WATER, TURTLE, LOG};
 
@@ -150,7 +152,7 @@ int main(void) {
 // takes in commands from terminal and acts accordingly
 void command_loop(struct board_tile game_board[SIZE][SIZE]) {
     int game_state = PLAYING;
-    int amount_of_lives = 3; 
+    int amount_of_lives = AMOUNT_OF_LIVES; 
     int sentinal = TRUE;
     int game_mode = OFF;
     
@@ -359,7 +361,7 @@ int log_row, int start_column, int end_column) {
     
     //checking if its out of bounds with if statement
     int log_on_wrong_row = FALSE;
-    if (log_row == 0 || log_row == (SIZE - 1)) {
+    if (log_row <= 0 || log_row >= (SIZE - 1)) {
         log_on_wrong_row = TRUE;
     }
 
