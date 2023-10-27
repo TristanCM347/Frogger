@@ -5,8 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <math.h>
-
-#define SIZE        9
+#include "frogger_visuals.h"
 
 #define TRUE        1
 #define FALSE       0
@@ -63,18 +62,19 @@ struct distances {
     double distance_of_down;
 };
 
-void print_board(struct board_tile game_board[SIZE][SIZE]);
+void print_board(struct board_tile game_board[SIZE][SIZE], int graphics_enabled);
 char print_board_2nd_function(struct board_tile game_board[SIZE][SIZE], 
 char type_char, int col, int row);
 void log_on_game_board_function(struct board_tile game_board[SIZE][SIZE],
-int game_mode);
+int game_mode, int graphics_enabled);
 void log_on_game_board_function_2(struct board_tile game_board[SIZE][SIZE],
 int log_row, int start_column, int end_column);
 void clear_row_function(struct board_tile game_board[SIZE][SIZE], 
-int game_mode);
+int game_mode, int graphics_enabled);
 void remove_log_function(
     struct board_tile game_board[SIZE][SIZE],
-    int game_mode
+    int game_mode,
+    int graphics_enabled
 );
 void remove_log_function_2(struct board_tile game_board[SIZE][SIZE], 
 int remove_col, int remove_row);
@@ -87,10 +87,10 @@ void move_right(struct board_tile game_board[SIZE][SIZE]);
 int finding_froggers_row(struct board_tile game_board[SIZE][SIZE]);
 int finding_froggers_col(struct board_tile game_board[SIZE][SIZE]);
 void move_consequences(struct board_tile game_board[SIZE][SIZE], 
-int **amount_of_lives_ptr2, int **game_state_ptr2);
+int **amount_of_lives_ptr2, int **game_state_ptr2, int graphics_enabled);
 int win_or_lose(int game_state, int sentinal);
-void adding_bug(struct board_tile game_board[SIZE][SIZE], int game_mode);
-void adding_superbug(struct board_tile game_board[SIZE][SIZE], int game_mode);
+void adding_bug(struct board_tile game_board[SIZE][SIZE], int game_mode, int graphics_enabled);
+void adding_superbug(struct board_tile game_board[SIZE][SIZE], int game_mode, int graphics_enabled);
 void checking_for_bugs(struct board_tile game_board[SIZE][SIZE]);
 int checking_the_first_direction(struct board_tile game_board[SIZE][SIZE], 
 int row, int col, int bug_cant_go_original_way);
@@ -123,16 +123,19 @@ struct board_tile game_board_temp[SIZE][SIZE]);
 void rows_going_left(struct board_tile game_board[SIZE][SIZE], 
 struct board_tile game_board_temp[SIZE][SIZE]);
 void initialise_gameboard(struct board_tile game_board[SIZE][SIZE]);
-void adding_turtles_and_start_game(struct board_tile game_board[SIZE][SIZE]);
+void adding_turtles_and_start_game(struct board_tile game_board[SIZE][SIZE], int graphics_enabled);
 int changing_game_mode_function(struct board_tile game_board[SIZE][SIZE], 
-int game_mode);
-void invalid_inputs(struct board_tile game_board[SIZE][SIZE], int game_mode);
+int game_mode, int graphics_enabled);
+void invalid_inputs(struct board_tile game_board[SIZE][SIZE], int game_mode, int graphics_enabled);
 void movement_sequence(struct board_tile game_board[SIZE][SIZE], 
-int *amount_of_lives_ptr1, int *game_state_ptr1, int game_mode);
-void command_loop(struct board_tile game_board[SIZE][SIZE]);
+int *amount_of_lives_ptr1, int *game_state_ptr1, int game_mode, int graphics_enabled);
+void command_loop(struct board_tile game_board[SIZE][SIZE], int graphics_enabled);
 double maths_formula(struct board_tile game_board[SIZE][SIZE], 
 int row, int col);
-
+int ask_for_enabling_graphics(void);
+int change_graphics_window(struct board_tile game_board[SIZE][SIZE], int graphics_enabled);
+void create_first_layer_array(struct board_tile game_board[SIZE][SIZE], char arr[SIZE][SIZE]);
+void create_second_layer_array(struct board_tile game_board[SIZE][SIZE], char arr[SIZE][SIZE]);
 
 //main
 int main(void) {
@@ -141,9 +144,13 @@ int main(void) {
     
     initialise_gameboard(game_board);
     
-    adding_turtles_and_start_game(game_board);
+    int graphics_enabled = ask_for_enabling_graphics();
+
+    print_board(game_board, graphics_enabled);
+
+    adding_turtles_and_start_game(game_board, graphics_enabled);
     
-    command_loop(game_board);
+    command_loop(game_board, graphics_enabled);
     
     printf("Thank you for playing Frogger!\n");
     return 0;
@@ -151,7 +158,7 @@ int main(void) {
 
 
 // takes in commands from terminal and acts accordingly
-void command_loop(struct board_tile game_board[SIZE][SIZE]) {
+void command_loop(struct board_tile game_board[SIZE][SIZE], int graphics_enabled) {
     int game_state = PLAYING;
     int amount_of_lives = AMOUNT_OF_LIVES; 
     int sentinal = TRUE;
@@ -159,83 +166,130 @@ void command_loop(struct board_tile game_board[SIZE][SIZE]) {
     
     while (sentinal) {
         printf("Enter command: ");
-        fflush(stdout);  // Make sure the prompt is printed immediately
-        usleep(250000);  // Introduce a delay of 250,000 microseconds (1/4 second)
+        fflush(stdout);
+        usleep(250000); 
         char scanned_char;
         int scanf_return = scanf(" %c", &scanned_char);
-        
+
         if (scanf_return != 1) {
             sentinal = FALSE;
         } else if (scanned_char == 'l') {
-            log_on_game_board_function(game_board, game_mode);
+            log_on_game_board_function(game_board, game_mode, graphics_enabled);
         } else if (scanned_char == 'c') {
-            clear_row_function(game_board, game_mode);
+            clear_row_function(game_board, game_mode, graphics_enabled);
         } else if (scanned_char == 'r') {
-            remove_log_function(game_board, game_mode);           
+            remove_log_function(game_board, game_mode, graphics_enabled);           
         } else if (scanned_char == 'w') {
             move_up(game_board);
             movement_sequence(game_board, &amount_of_lives, &game_state,
-            game_mode);
+            game_mode, graphics_enabled);
         } else if (scanned_char == 's') {
             move_down(game_board);
             movement_sequence(game_board, &amount_of_lives, &game_state,
-            game_mode);
+            game_mode, graphics_enabled);
         } else if (scanned_char == 'a') {
             move_left(game_board);            
             movement_sequence(game_board, &amount_of_lives, &game_state,
-            game_mode);
+            game_mode, graphics_enabled);
         } else if (scanned_char == 'd') {
             move_right(game_board);            
             movement_sequence(game_board, &amount_of_lives, &game_state,
-            game_mode);
+            game_mode, graphics_enabled);
         } else if (scanned_char == 'q') {
             movement_sequence(game_board, &amount_of_lives, &game_state,
-            game_mode);
+            game_mode, graphics_enabled);
         } else if (scanned_char == 'b') {
-            adding_bug(game_board, game_mode);   
+            adding_bug(game_board, game_mode, graphics_enabled);   
         } else if (scanned_char == 'g') {
-            game_mode = changing_game_mode_function(game_board, game_mode);      
+            game_mode = changing_game_mode_function(game_board, game_mode, graphics_enabled);      
         } else if (scanned_char == 'z') {
-            adding_superbug(game_board, game_mode);
+            adding_superbug(game_board, game_mode, graphics_enabled);
+        } else if (scanned_char == 'v') {
+            // enable the graphics window
+            graphics_enabled = change_graphics_window(game_board, graphics_enabled);
         } else {
-            invalid_inputs(game_board, game_mode);
+            invalid_inputs(game_board, game_mode, graphics_enabled);
         }
 
         sentinal = win_or_lose(game_state, sentinal);
+    }
+
+    if (graphics_enabled == ON) {
+        close_graphics();
+    }
+}
+
+// asks user to enable visual graphis in another window
+int ask_for_enabling_graphics(void) {
+    printf("Would you like to enable better graphics? (y/n)\n");
+    printf("Note: You can change this setting after the game is initialized.\n");
+    char enable_graphics;
+    scanf("%c", &enable_graphics);
+    if (enable_graphics == 'y') {
+        printf("\n### BETTER GRAPHICS ENABLED ###\n\n");
+        initialise_graphics();
+        return ON;
+    } else {
+        printf("\n### BETTER GRAPHICS DISABLED ###\n\n");
+        return OFF;
     }
 }
 
 
 // does everyhting after player moves, like changing the gameboard
 void movement_sequence(struct board_tile game_board[SIZE][SIZE], 
-int *amount_of_lives_ptr1, int *game_state_ptr1, int game_mode) {
+int *amount_of_lives_ptr1, int *game_state_ptr1, int game_mode, int graphics_enabled) {
     checking_for_bugs(game_board);
     
     if (game_mode == ON) {
         moving_rows(game_board);
     }
     
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
     
-    move_consequences(game_board, &amount_of_lives_ptr1, &game_state_ptr1);
+    move_consequences(game_board, &amount_of_lives_ptr1, &game_state_ptr1, graphics_enabled);
 
 }
 
 
 // checks invalid inputs from terminal
-void invalid_inputs(struct board_tile game_board[SIZE][SIZE], int game_mode) {
+void invalid_inputs(struct board_tile game_board[SIZE][SIZE], int game_mode, int graphics_enabled) {
     if (game_mode == ON) {
         printf("This command is not supported in game mode.\n");
     }
     
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
 }
 
 
 // changes gamemode or not if g is inputed as a command by returning gamemode
 // variable
+int change_graphics_window(struct board_tile game_board[SIZE][SIZE], int graphics_enabled) {
+    int on_or_off;
+    scanf("%d", &on_or_off);
+    if (graphics_enabled == ON) {
+        if (on_or_off == OFF) {
+            graphics_enabled = OFF;
+            close_graphics();
+            printf("\n### BETTER GRAPHICS DISABLED ###\n\n");
+        }
+    } else if (graphics_enabled == OFF) {
+        if (on_or_off == ON) {
+            graphics_enabled = ON;
+            initialise_graphics();
+            printf("\n### BETTER GRAPHICS ENABLED ###\n\n");
+        }
+    }
+    
+    print_board(game_board, graphics_enabled);
+    
+    return graphics_enabled;
+}
+
+// changes gamemode or not if g is inputed as a command by returning gamemode
+// variable
 int changing_game_mode_function(struct board_tile game_board[SIZE][SIZE], 
-int game_mode) {
+int game_mode, int graphics_enabled) {
     int on_or_off;
     scanf("%d", &on_or_off);
     if (game_mode == ON) {
@@ -250,7 +304,7 @@ int game_mode) {
         }
     }
     
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
     
     return game_mode;
 }
@@ -280,7 +334,7 @@ int win_or_lose(int game_state, int sentinal) {
 
 
 // adds turtles to gameboard at the start of the game and then starts the game
-void adding_turtles_and_start_game(struct board_tile game_board[SIZE][SIZE]) {
+void adding_turtles_and_start_game(struct board_tile game_board[SIZE][SIZE], int graphics_enabled) {
     printf("How many turtles? ");
     int number_of_turtles;
     scanf("%d", &number_of_turtles);
@@ -301,7 +355,7 @@ void adding_turtles_and_start_game(struct board_tile game_board[SIZE][SIZE]) {
 
     printf("Game Started\n");
     
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
 }
 
 
@@ -336,7 +390,7 @@ void initialise_gameboard(struct board_tile game_board[SIZE][SIZE]) {
 // function for when l is inputed in terminal that starts trying to put logs on
 // the gameboard by scanning coordinates then acting accordingly
 void log_on_game_board_function(struct board_tile game_board[SIZE][SIZE],
-int game_mode) {
+int game_mode, int graphics_enabled) {
     int log_row;
     int start_column;
     int end_column;
@@ -349,7 +403,7 @@ int game_mode) {
         end_column);
     }
 
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
 }
 
 
@@ -400,7 +454,7 @@ int log_row, int start_column, int end_column) {
 // clears row on gameboardif c is inputed, 
 // and every other consideration is checked
 void clear_row_function(struct board_tile game_board[SIZE][SIZE], 
-int game_mode) {
+int game_mode, int graphics_enabled) {
     int row_to_clear;
     scanf("%d", &row_to_clear);
     
@@ -433,7 +487,7 @@ int game_mode) {
         }
     }
     
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
     
 }
 
@@ -441,7 +495,7 @@ int game_mode) {
 // starts trying to remove an individual log on the gameboard if r is inputed
 // by scanning values and seeing if gamemode is on
 void remove_log_function(struct board_tile game_board[SIZE][SIZE], 
-int game_mode) {
+int game_mode, int graphics_enabled) {
     int remove_col;
     int remove_row;
     scanf("%d %d", &remove_row, &remove_col);
@@ -452,7 +506,7 @@ int game_mode) {
         remove_log_function_2(game_board, remove_col, remove_row);
     }
     
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
 }
 
 
@@ -652,13 +706,13 @@ int finding_froggers_col(struct board_tile game_board[SIZE][SIZE]) {
 // changed and then returns pointer values to desribe what happens
 // e.g. whether he dies or lives 
 void move_consequences(struct board_tile game_board[SIZE][SIZE], 
-int **amount_of_lives_ptr2, int **game_state_ptr2) {
+int **amount_of_lives_ptr2, int **game_state_ptr2, int graphics_enabled) {
     
     int frogger_dies = FALSE;
     //checking for if game is won with if statement
     if (game_board[0][0].occupied == TRUE || game_board[0][2].occupied == TRUE 
     || game_board[0][4].occupied == TRUE || game_board[0][6].occupied == TRUE
-    || game_board[0][0].occupied == TRUE) {
+    || game_board[0][8].occupied == TRUE) {
         **game_state_ptr2 = WON;
     }
 
@@ -682,7 +736,7 @@ int **amount_of_lives_ptr2, int **game_state_ptr2) {
     if (**amount_of_lives_ptr2 != 0 && frogger_dies == TRUE) {
         printf("\n");
         printf("# LIVES LEFT: %d # \n\n", **amount_of_lives_ptr2);
-        print_board(game_board);
+        print_board(game_board, graphics_enabled);
     } else if (**amount_of_lives_ptr2 == 0) {
         **game_state_ptr2 = LOST;
     }
@@ -691,7 +745,7 @@ int **amount_of_lives_ptr2, int **game_state_ptr2) {
 
 
 // if coordinates are valid adds a normal bug to the gameboard
-void adding_bug(struct board_tile game_board[SIZE][SIZE], int game_mode) {
+void adding_bug(struct board_tile game_board[SIZE][SIZE], int game_mode, int graphics_enabled) {
     int bugs_row;
     int bugs_col;
     scanf("%d %d", &bugs_row, &bugs_col);
@@ -732,12 +786,12 @@ void adding_bug(struct board_tile game_board[SIZE][SIZE], int game_mode) {
         }
     }
     
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
 }
 
 
 // if coordintates are valid adds superbug to gameboard
-void adding_superbug(struct board_tile game_board[SIZE][SIZE], int game_mode) {
+void adding_superbug(struct board_tile game_board[SIZE][SIZE], int game_mode, int graphics_enabled) {
     int superbugs_row;
     int superbugs_col;
     scanf("%d %d", &superbugs_row, &superbugs_col);
@@ -780,7 +834,7 @@ void adding_superbug(struct board_tile game_board[SIZE][SIZE], int game_mode) {
         }
     }
     
-    print_board(game_board);
+    print_board(game_board, graphics_enabled);
 }
 
 
@@ -1137,7 +1191,7 @@ struct board_tile game_board_temp[SIZE][SIZE]) {
 // moves required rows left
 void rows_going_left(struct board_tile game_board[SIZE][SIZE], 
 struct board_tile game_board_temp[SIZE][SIZE]) {
-    for (int row = 1; row < (SIZE - 1); row += 2) {
+    for (int row = 1; row < (SIZE - 1); row += 4) {
         for (int col = 1; col < SIZE; col++) {
             //this does all the non wrapping tiles with a loop
             game_board[row][col - 1].type = game_board_temp[row][col].type;
@@ -1176,7 +1230,7 @@ struct board_tile game_board_temp[SIZE][SIZE]) {
 // moves required rows right
 void rows_going_right(struct board_tile game_board[SIZE][SIZE], 
 struct board_tile game_board_temp[SIZE][SIZE]) {
-    for (int row = 2; row < (SIZE - 1); row += 2) {
+    for (int row = 3; row < (SIZE - 1); row += 4) {
         for (int col = 0; col < (SIZE - 1); col++) {
             //this does all the non wrapping tiles with a loop
             game_board[row][col + 1].type = game_board_temp[row][col].type;
@@ -1225,7 +1279,7 @@ void moving_rows(struct board_tile game_board[SIZE][SIZE]) {
 
 
 // prints the gameboard
-void print_board(struct board_tile game_board[SIZE][SIZE]) {
+void print_board(struct board_tile game_board[SIZE][SIZE], int graphics_enabled) {
     for (int row = 0; row < SIZE; row++) {
         for (int col = 0; col < SIZE; col++) {
             char type_char = '\0';
@@ -1242,6 +1296,16 @@ void print_board(struct board_tile game_board[SIZE][SIZE]) {
             printf("%c ", type_char);
         }
         printf("\n");
+    }
+    // check if visuals are on
+    // if they are you can assume that the window is already opened.
+    if (graphics_enabled == ON) {
+        // pass array into visuals functions
+        char first_layer_letters[SIZE][SIZE];
+        char second_layer_letters[SIZE][SIZE];
+        create_first_layer_array(game_board, first_layer_letters);
+        create_second_layer_array(game_board, second_layer_letters);
+        update_graphics(first_layer_letters, second_layer_letters);
     }
 }
 
@@ -1262,4 +1326,46 @@ char type_char, int col, int row) {
         type_char = 'L';
     }
     return type_char;
+}
+
+// creates 2d letter array containing everything but only bugs and frogger
+void create_first_layer_array(struct board_tile game_board[SIZE][SIZE], char arr[SIZE][SIZE]) {
+    for (int row = 0; row < SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            char type_char = '\0';
+            enum tile_type type = game_board[row][col].type;
+            if (type == LILLYPAD) {
+                type_char = 'o';
+            } else if (type == BANK) {
+                type_char = 'x';
+            } else if (type == WATER) {
+                type_char = '~';
+            } else if (type == TURTLE) {
+                type_char = 'T';
+            } else if (type == LOG) {
+                type_char = 'L';
+            }
+            arr[row][col] = type_char;
+        }
+    }
+
+}
+
+// creates 2d letter array containing only bugs and frogger
+void create_second_layer_array(struct board_tile game_board[SIZE][SIZE], char arr[SIZE][SIZE]) {
+    for (int row = 0; row < SIZE; row++) {
+        for (int col = 0; col < SIZE; col++) {
+            char type_char = '\0';
+            if (game_board[row][col].occupied) {
+                type_char = 'F';
+            } else if (game_board[row][col].bug.superbug == TRUE) {
+                type_char = 'S';
+            } else if (game_board[row][col].bug.bug_on_tile == TRUE) {
+                type_char = 'B';
+            } else {
+                type_char = '?';
+            }
+            arr[row][col] = type_char;
+        }
+    }
 }
