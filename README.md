@@ -59,6 +59,12 @@ Regular bugs in the game have a simpler movement pattern. They move left and rig
 
 - **g [0/1]**: Toggle game modes. Use g 1 to activate moving rows and g 0 to deactivate them.
 
+> **Note:** Rows 1 and 5 move left. Rows 3 and 7 move right.
+
+### Game Modes (Moving Rows)
+
+- **v [0/1]**: Toggle better graphics in window. Use v 1 to activate better graphics window and g 0 to deactivate it.
+
 ### Game Termination
 
 To gracefully terminate the game at any point, simply press `Control + D`. This will signal an end-of-file (EOF) to the game, prompting it to exit safely. Unexpected behaviour will arise otherwise.
